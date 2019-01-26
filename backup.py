@@ -34,6 +34,8 @@ def main():
         while True:
             try:
                 msg = MESSAGE_QUEUE.get() + '\n'
+                if msg.startswith('Successful download for'):
+                    continue
                 sender.write(msg)
                 time.sleep(0.2)
             except:
