@@ -22,18 +22,22 @@ debug = True
 request = requests.Session()
 request.verify = False
 request.headers.update({'X-Request': 'JSON', 'X-Requested-With': 'XMLHttpRequest', 'Referer': BASE_URL, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36'})
+windows_sender = None
 
 def printcolor(msg, color=None):
     if color == "green":
-        print '\033[92m{}\033[0m'.format(str(msg))
+        pmsg = '\033[92m{}\033[0m'.format(str(msg))
     elif color == "blue":
-        print '\033[94m{}\033[0m'.format(str(msg))
+        pmsg = '\033[94m{}\033[0m'.format(str(msg))
     elif color == "yellow":
-        print '\033[93m{}\033[0m'.format(str(msg))
+        pmsg = '\033[93m{}\033[0m'.format(str(msg))
     elif color == "red":
-        print '\033[91m{}\033[0m'.format(str(msg))
+        pmsg = '\033[91m{}\033[0m'.format(str(msg))
     else:
-        print str(msg)
+        pmsg = str(msg)
+    print pmsg
+    if windows_sender is not None:
+        windows_sender.write(str(msg)+ "\n")
 
 def makedir(d):
     d = str(d)
@@ -177,6 +181,17 @@ def _crawl_user(user_id):
         pool.join()#主进程阻塞等待子进程的退出
         printcolor("Current user {}, download over".format(user_id), "green")
 
+def auth_login(user, password):
+    if user and password:
+        auth = _post_login(user, password)
+        if not auth["success"]:
+            return False, '登陆失败: ' + auth.get("msg", '')
+        # for k, v in auth['data'].items():
+        #     printcolor(str(k) + ": " + str(v))
+        return True, auth['data']
+    else:
+        return False, "您未设置账号密码，将处于未登录状态，抓取的图片可能有限；设置账号密码后，图片抓取率可达99.99%！"
+
 def main(args):
     if not args.action:
         parser.print_help()
@@ -187,17 +202,21 @@ def main(args):
     version    = args.version
     board_id   = args.board_id
     user_id    = args.user_id
+    execute(user, password, user_id, board_id, action, version)
+
+
+def execute(user, password, user_id=None, board_id=None, action=None, version=None):
+    action = action or 'getUser'
     if version:
         printcolor("https://github.com/staugur/grab_huaban_board, v{}".format(__version__))
         return
     # 用户登录
-    if user and password:
-        auth = _post_login(user, password)
-        if not auth["success"]:
-            printcolor('Auth: ' + auth.get("msg", ''), "yellow")
-            return
-    else:
-        printcolor("您未设置账号密码，将处于未登录状态，抓取的图片可能有限；设置账号密码后，图片抓取率可达99.99%！")
+    ok, msg = auth_login(user, password)
+    if not ok:
+        printcolor(msg)
+        return
+    printcolor("登陆成功")
+
     # 主要动作-功能
     if action == "getBoard":
         # 抓取单画板
