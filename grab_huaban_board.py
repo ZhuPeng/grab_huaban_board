@@ -8,6 +8,7 @@ __doc__     = "https://www.saintic.com/blog/204.html"
 import re, os, sys, json, logging, requests
 from multiprocessing import Pool as ProcessPool
 from multiprocessing.dummy import Pool as ThreadPool
+import Queue
 reload(sys)
 sys.setdefaultencoding('utf-8')
 BASE_URL = 'http://login.meiwu.co'
@@ -16,13 +17,12 @@ AUTH_URL = BASE_URL + '/auth'
 logging.basicConfig(level=logging.INFO,
                 format='[ %(levelname)s ] %(asctime)s %(filename)s:%(threadName)s:%(process)d:%(lineno)d %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S',
-                filename='huaban.log',
                 filemode='a')
 debug = True
 request = requests.Session()
 request.verify = False
 request.headers.update({'X-Request': 'JSON', 'X-Requested-With': 'XMLHttpRequest', 'Referer': BASE_URL, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36'})
-windows_sender = None
+MESSAGE_QUEUE = Queue.Queue()
 
 def printcolor(msg, color=None):
     if color == "green":
@@ -36,8 +36,7 @@ def printcolor(msg, color=None):
     else:
         pmsg = str(msg)
     print pmsg
-    if windows_sender is not None:
-        windows_sender.write(str(msg)+ "\n")
+    MESSAGE_QUEUE.put(str(msg))
 
 def makedir(d):
     d = str(d)
@@ -175,7 +174,7 @@ def _crawl_user(user_id):
                     last_board = user_next_data["boards"][-1]["board_id"]
                 retry -= 1
         board_ids = map(str, [ board['board_id'] for board in board_ids ])
-        pool = ProcessPool()  #创建进程池
+        pool = ThreadPool()  #创建进程池
         pool.map(_crawl_board, board_ids) #board_ids：要处理的数据列表； _crawl_board：处理列表中数据的函数
         pool.close()#关闭进程池，不再接受新的进程
         pool.join()#主进程阻塞等待子进程的退出
