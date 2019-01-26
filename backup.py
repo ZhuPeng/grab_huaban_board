@@ -12,13 +12,13 @@ def read_input():
     try:
         return _read_input()
     except:
-        return '', '', ''
+        return '', ''
 
 def _read_input():
     with open(passwd_file) as f:
         l = [x.strip() for x in f.readlines()]
-        return l[0] if len(l) > 0 else '', l[1] if len(l) > 1 else '', l[2] if len(l) > 2 else ''
-    return '', '', ''
+        return l[0] if len(l) > 0 else '', l[1] if len(l) > 1 else ''
+    return '', ''
 
 
 def save_file(*args):
@@ -50,13 +50,12 @@ def main():
             return
         usertext = user.GetValue()
         passwdtext = passwd.GetValue()
-        huabanusertext = huabanuser.GetValue()
-        save_file(usertext, passwdtext, huabanusertext)
+        save_file(usertext, passwdtext)
         def _sync():
             global sync_flag
             sync_flag = True
             MESSAGE_QUEUE.put("开始同步...")
-            execute(usertext, passwdtext, huabanusertext)
+            execute(usertext, passwdtext)
             MESSAGE_QUEUE.put("同步完成")
             sync_flag = False
         thread.start_new_thread(_sync, ())
@@ -65,24 +64,21 @@ def main():
     app = wx.App()
     width = 800
     frame = wx.Frame(None, title="花瓣本地备份", pos=(80, 80), size=(width, width))
-    wx.StaticText(frame, -1, "用户名：", pos=(5, 5))
-    user = wx.TextCtrl(frame, pos=(80, 5), size=(250, 24))
+    wx.StaticText(frame, -1, "用户名：", pos=(5, 10))
+    user = wx.TextCtrl(frame, pos=(80, 10), size=(250, 24))
 
     wx.StaticText(frame, -1, "密码：", pos=(5, 40))
     passwd = wx.TextCtrl(frame, pos=(80, 40), size=(250, 24))
 
-    wx.StaticText(frame, -1, "花瓣用户名：", pos=(5, 80))
-    huabanuser = wx.TextCtrl(frame, pos=(80, 80), size=(250, 24))
-    u, p, h = read_input()
+    u, p = read_input()
     user.write(u)
     passwd.write(p)
-    huabanuser.write(h)
 
-    content_text = wx.TextCtrl(frame,  pos=(5, 160), size=(width, width-200), style=wx.TE_MULTILINE)
-    thread.start_new_thread(sync_msg, (content_text, ))
-
-    sync_button = wx.Button(frame, label="开始备份", pos=(5, 120), size=(100, 50))
+    sync_button = wx.Button(frame, label="开始备份", pos=(5, 80), size=(100, 50))
     sync_button.Bind(wx.EVT_BUTTON, sync)
+
+    content_text = wx.TextCtrl(frame,  pos=(5, 120), size=(width, width-200), style=wx.TE_MULTILINE)
+    thread.start_new_thread(sync_msg, (content_text, ))
 
     frame.Show()
     app.MainLoop()

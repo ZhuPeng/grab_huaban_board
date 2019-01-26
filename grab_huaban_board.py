@@ -56,6 +56,7 @@ def _post_login(email, password):
     except Exception,e:
         logging.error(e, exc_info=True)
     else:
+        # printcolor("_post_login: " + str(resp))
         if "user" in resp:
             # 登录成功
             res.update(success=True, data=resp["user"])
@@ -215,6 +216,8 @@ def execute(user, password, user_id=None, board_id=None, action=None, version=No
         printcolor(msg)
         return
     printcolor("登陆成功")
+    user_id = msg['urlname']
+    printcolor("登陆后花瓣用户名：" + user_id)
 
     # 主要动作-功能
     if action == "getBoard":
