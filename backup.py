@@ -3,15 +3,25 @@
 import wx
 import thread
 import time
-from grab_huaban_board import execute, MESSAGE_QUEUE
+from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor
 passwd_file = 'password.conf'
 sync_flag = False
+
+
+def exception_run(f):
+    def wrapper(*args, **kws):
+        try:
+            return f(*args, **kws)
+        except Exception as e:
+            printcolor('程序运行出错：' + str(e))
+    return wrapper
 
 
 def read_input():
     try:
         return _read_input()
-    except:
+    except Exception as e:
+        printcolor('程序运行出错：' + str(e))
         return '', ''
 
 def _read_input():
@@ -21,6 +31,7 @@ def _read_input():
     return '', ''
 
 
+@exception_run
 def save_file(*args):
     raw = open(passwd_file, "w+")
     raw.seek(0)
@@ -50,13 +61,16 @@ def main():
         if sync_flag:
             MESSAGE_QUEUE.put("正在同步，请等待成功后再试")
             return
+        MESSAGE_QUEUE.put("开始同步...")
         usertext = user.GetValue()
         passwdtext = passwd.GetValue()
+        MESSAGE_QUEUE.put("读取用户名和密码")
         save_file(usertext, passwdtext)
+
+        @exception_run
         def _sync():
             global sync_flag
             sync_flag = True
-            MESSAGE_QUEUE.put("开始同步...")
             execute(usertext, passwdtext)
             MESSAGE_QUEUE.put("同步完成")
             sync_flag = False
