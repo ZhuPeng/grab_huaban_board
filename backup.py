@@ -3,9 +3,13 @@
 import wx
 import thread
 import time
-from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor
+import os
+import getpass
+from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor, makedir
 passwd_file = 'password.conf'
 sync_flag = False
+user_name = getpass.getuser()
+BASE_PATH = '/Users/%s/Documents/花瓣网备份/' % user_name
 
 
 def exception_run(f):
@@ -13,16 +17,24 @@ def exception_run(f):
         try:
             return f(*args, **kws)
         except Exception as e:
-            printcolor('程序运行出错：' + str(e))
+            printcolor(os.getcwd() + ' 程序运行出错：' + str(e))
     return wrapper
+
+
+@exception_run
+def change_workspace():
+    makedir(BASE_PATH)
+    os.chdir(BASE_PATH)
+    printcolor("更改工作目录到：" + BASE_PATH)
+change_workspace()
 
 
 def read_input():
     try:
         return _read_input()
-    except Exception as e:
-        printcolor('程序运行出错：' + str(e))
+    except:
         return '', ''
+
 
 def _read_input():
     with open(passwd_file) as f:
@@ -61,7 +73,6 @@ def main():
         if sync_flag:
             MESSAGE_QUEUE.put("正在同步，请等待成功后再试")
             return
-        MESSAGE_QUEUE.put("开始同步...")
         usertext = user.GetValue()
         passwdtext = passwd.GetValue()
         MESSAGE_QUEUE.put("读取用户名和密码")
@@ -71,8 +82,9 @@ def main():
         def _sync():
             global sync_flag
             sync_flag = True
+            MESSAGE_QUEUE.put("开始同步...")
             execute(usertext, passwdtext)
-            MESSAGE_QUEUE.put("同步完成")
+            MESSAGE_QUEUE.put("操作完成")
             sync_flag = False
         thread.start_new_thread(_sync, ())
         # thread.start_new_thread(test_msg, ())
@@ -95,6 +107,7 @@ def main():
 
     content_text = wx.TextCtrl(frame,  pos=(5, 120), size=(width, width-200), style=wx.TE_MULTILINE)
     thread.start_new_thread(sync_msg, (content_text, ))
+    printcolor("当前执行目录：" + os.getcwd())
 
     frame.Show()
     app.MainLoop()
