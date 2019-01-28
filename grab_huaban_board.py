@@ -156,8 +156,10 @@ def _crawl_user(user_id):
             printcolor(r.get("msg"))
             return
         board_number = int(user_data['board_count'])
+        retry = board_number / 5 + 1
         board_ids = user_data['boards']
         printcolor("Current user <{}> boards number is {}, first boards number is {}".format(user_id, board_number, len(board_ids)), 'red')
+        # printcolor("Current collect board ids: " + str([b['board_id'] for b in board_ids]))
         if len(board_ids) < board_number:
             last_board = user_data['boards'][-1]['board_id']
             while 1 <= retry:
@@ -165,12 +167,14 @@ def _crawl_user(user_id):
                 user_next_url = BASE_URL + "/{}?jhhft3as&max={}&limit={}&wfl=1".format(user_id, last_board, limit)
                 try:
                     user_next_data = request.get(user_next_url).json()["user"]
-                except Exception,e:
+                except Exception as e:
+                    printcolor("Exception: " + str(e))
                     logging.error(e, exc_info=True)
                     continue
                 else:
                     board_ids += user_next_data["boards"]
-                    printcolor("ajax load user with board_id {}, get boards number is {}, merged".format(last_board, len(user_next_data["boards"])), "blue")
+                    printcolor("ajax load user with board_id {}, get boards number is {}, merged total {}".format(last_board, len(user_next_data["boards"]), len(board_ids)), "blue")
+                    # printcolor("Current collect another board ids: " + str([b['board_id'] for b in user_next_data["boards"]]))
                     if len(user_next_data["boards"]) == 0:
                         break
                     last_board = user_next_data["boards"][-1]["board_id"]
