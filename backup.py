@@ -25,8 +25,7 @@ def exception_run(f):
 def change_workspace():
     makedir(BASE_PATH)
     os.chdir(BASE_PATH)
-    printcolor("更改工作目录到：" + BASE_PATH)
-change_workspace()
+    printcolor("图片备份目录：文稿 => 花瓣网备份")
 
 
 def read_input():
@@ -83,8 +82,9 @@ def main():
             global sync_flag
             sync_flag = True
             MESSAGE_QUEUE.put("开始同步...")
+            change_workspace()
             execute(usertext, passwdtext)
-            MESSAGE_QUEUE.put("操作完成")
+            MESSAGE_QUEUE.put("操作完成，图片备份目录：文稿 => 花瓣网备份")
             sync_flag = False
         thread.start_new_thread(_sync, ())
         # thread.start_new_thread(test_msg, ())
@@ -107,7 +107,6 @@ def main():
 
     content_text = wx.TextCtrl(frame,  pos=(5, 120), size=(width, width-200), style=wx.TE_MULTILINE)
     thread.start_new_thread(sync_msg, (content_text, ))
-    printcolor("当前执行目录：" + os.getcwd())
 
     frame.Show()
     app.MainLoop()
