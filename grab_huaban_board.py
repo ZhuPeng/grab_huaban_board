@@ -108,6 +108,7 @@ def _crawl_board(board_id):
         else:
             printcolor(r.get("msg"))
             return
+        printcolor("开始下载画板「{}」...".format(board_data['title']), "green")
         pin_number = board_data["pin_count"]
         board_pins = board_data["pins"]
         printcolor("Current board <{}> pins number is {}, first pins number is {}".format(board_id, pin_number, len(board_pins)), 'red')
@@ -134,7 +135,7 @@ def _crawl_board(board_id):
         pool.map(_download_img, board_pins)
         pool.close()
         pool.join()
-        printcolor("Current board {}, download over".format(board_id), "green")
+        printcolor("画板「{}」下载完成".format(board_data['title']), "green")
 
 def _crawl_user(user_id):
     """ 查询user的画板 """

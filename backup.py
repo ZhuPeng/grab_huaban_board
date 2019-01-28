@@ -57,7 +57,8 @@ def main():
         while True:
             try:
                 msg = MESSAGE_QUEUE.get() + '\n'
-                if msg.startswith('Successful download for'):
+                if msg.startswith('Successful download for') or msg.startswith('ajax load ') or \
+                        msg.startswith('Current board '):
                     continue
                 sender.write(msg)
                 time.sleep(0.2)
