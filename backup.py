@@ -26,6 +26,7 @@ def change_workspace():
     makedir(BASE_PATH)
     os.chdir(BASE_PATH)
     printcolor("图片备份目录：文稿 => 花瓣网备份")
+change_workspace()
 
 
 def read_input():
