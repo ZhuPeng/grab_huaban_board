@@ -111,6 +111,7 @@ def _crawl_board(board_id):
         printcolor("开始下载画板「{}」...".format(board_data['title']), "green")
         pin_number = board_data["pin_count"]
         board_pins = board_data["pins"]
+        retry = 2 * pin_number / limit
         printcolor("Current board <{}> pins number is {}, first pins number is {}".format(board_id, pin_number, len(board_pins)), 'red')
         if len(board_pins) < pin_number:
             last_pin = board_pins[-1]['pin_id']
@@ -156,7 +157,7 @@ def _crawl_user(user_id):
             printcolor(r.get("msg"))
             return
         board_number = int(user_data['board_count'])
-        retry = board_number / 5 + 1
+        retry = 2 * board_number / limit
         board_ids = user_data['boards']
         printcolor("Current user <{}> boards number is {}, first boards number is {}".format(user_id, board_number, len(board_ids)), 'red')
         # printcolor("Current collect board ids: " + str([b['board_id'] for b in board_ids]))
