@@ -9,6 +9,7 @@ import re, os, sys, json, logging, requests
 from multiprocessing import Pool as ProcessPool
 from multiprocessing.dummy import Pool as ThreadPool
 import Queue
+import json
 reload(sys)
 sys.setdefaultencoding('utf-8')
 BASE_URL = 'http://login.meiwu.co'
@@ -37,6 +38,13 @@ def printcolor(msg, color=None):
         pmsg = str(msg)
     print pmsg
     MESSAGE_QUEUE.put(str(msg))
+
+
+def rename(fr, to):
+    if not os.path.exists(fr):
+        return
+    os.rename(fr, to)
+
 
 def makedir(d):
     d = str(d)
@@ -142,6 +150,13 @@ def _crawl_user(user_id):
     """ 查询user的画板 """
     if not user_id:
         return
+
+    if os.path.exists('重要文件勿删.json'):
+        with open('重要文件勿删.json', 'r') as f:
+            data = json.load(f)
+            for b in data:
+                rename(b['title'], str(b['board_id']))
+
     retry = limit = 5
     user_url = BASE_URL + "/{}".format(user_id)
     try:
@@ -167,9 +182,10 @@ def _crawl_user(user_id):
                 #get ajax pin data
                 user_next_url = BASE_URL + "/{}?jhhft3as&max={}&limit={}&wfl=1".format(user_id, last_board, limit)
                 try:
-                    user_next_data = request.get(user_next_url).json()["user"]
+                    res = request.get(user_next_url).json()
+                    user_next_data = res["user"]
                 except Exception as e:
-                    printcolor("Exception: " + str(e))
+                    printcolor("异常: " + str(e) + " res: " + str(res))
                     logging.error(e, exc_info=True)
                     continue
                 else:
@@ -180,11 +196,20 @@ def _crawl_user(user_id):
                         break
                     last_board = user_next_data["boards"][-1]["board_id"]
                 retry -= 1
-        board_ids = map(str, [ board['board_id'] for board in board_ids ])
+        board_ids_list = map(str, [ board['board_id'] for board in board_ids ])
+
+        with open('重要文件勿删.json', 'w') as f:
+            json.dump(board_ids, f)
+        # double check for json file delete
+        for b in board_ids:
+            rename(b['title'], str(b['board_id']))
+
         pool = ThreadPool()  #创建进程池
-        pool.map(_crawl_board, board_ids) #board_ids：要处理的数据列表； _crawl_board：处理列表中数据的函数
+        pool.map(_crawl_board, board_ids_list) #board_ids：要处理的数据列表； _crawl_board：处理列表中数据的函数
         pool.close()#关闭进程池，不再接受新的进程
         pool.join()#主进程阻塞等待子进程的退出
+        for b in board_ids:
+            rename(str(b['board_id']), b['title'])
         printcolor("Current user {}, download over".format(user_id), "green")
 
 def auth_login(user, password):
