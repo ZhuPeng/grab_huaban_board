@@ -32,7 +32,7 @@ def login(login_url, login_name, login_passwd, interval=3):
     return cookies
 
 if __name__ == '__main__':
-    url = 'https://graph.qq.com/oauth2.0/show?which=Login&display=pc&client_id=100240394&response_type=code&redirect_uri=http%3A%2F%2Flogin.meiwu.co%2Foauth%2Fcallback&scope=get_user_info%2Cadd_topic%2Cget_info%2Cget_fanslist%2Cget_idolist%2Cadd_idol%2Ccheck_page_fans'
+    url = 'https://graph.qq.com/oauth2.0/show?which=Login&display=pc&client_id=100240394&response_type=code&redirect_uri=http://login.meiwu.co/oauth/callback&scope=get_user_info,add_topic,get_info,get_fanslist,get_idolist,add_idol,check_page_fans'
     name = ""
     password = ""
     cookies = login(url, name, password)
