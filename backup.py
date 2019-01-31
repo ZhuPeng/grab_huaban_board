@@ -10,7 +10,13 @@ from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor, makedir, \
 import qq
 import weibo
 from selenium import webdriver
-DRIVER = webdriver.Chrome()
+# DRIVER = webdriver.PhantomJS()
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--no-sandbox')
+DRIVER = webdriver.Chrome(executable_path=os.path.abspath("./chromedriver"), chrome_options=chrome_options)
+# DRIVER = webdriver.Chrome()
+# DRIVER.set_window_size(1920, 1080)  # big enough
 passwd_file = 'password.conf'
 sync_flag = False
 user_name = getpass.getuser()

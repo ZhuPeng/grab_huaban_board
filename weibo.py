@@ -12,6 +12,7 @@ def login(login_name, login_passwd, driver=None, interval=3):
     time.sleep(interval)
     weibo = driver.find_element_by_class_name('weibo')
     weibo.click()
+    print 'Current url:', driver.current_url
 
     account = driver.find_element_by_id('userId')
     password = driver.find_element_by_id('passwd')
@@ -24,9 +25,15 @@ def login(login_name, login_passwd, driver=None, interval=3):
     submit = driver.find_element_by_class_name('WB_btn_login')
     submit.click()
     time.sleep(interval)
+    print 'Current url:', driver.current_url
 
-    driver.get('http://login.meiwu.co/')
-    time.sleep(interval)
+    while True:
+        driver.get('http://login.meiwu.co/')
+        time.sleep(interval)
+        print 'Current url:', driver.current_url
+        if '画板' in driver.page_source:
+            break
+
     cookies = driver.get_cookies()
     return driver.current_url, cookies
 
