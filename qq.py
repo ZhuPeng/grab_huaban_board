@@ -1,6 +1,21 @@
 #! encoding: utf-8
 import time
 from selenium import webdriver
+import urllib
+import wx
+from cStringIO import StringIO
+
+def get_qrcode():
+    url = 'https://ssl.ptlogin2.qq.com/ptqrshow?appid=716027609&e=2&l=M&s=3&d=72&v=4&t=0.38620931174474316&daid=383&pt_3rd_aid=100240394'
+
+    try:
+        fp = urllib.urlopen(url)
+        data = fp.read()
+        fp.close()
+        return wx.ImageFromStream(StringIO(data))
+    except Exception as e:
+        print str(e)
+    return wx.Image(240,240)
 
 
 def login(login_url, login_name, login_passwd, interval=3):
