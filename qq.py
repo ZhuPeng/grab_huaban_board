@@ -4,51 +4,47 @@ from selenium import webdriver
 import urllib
 import wx
 from cStringIO import StringIO
+QRCODE_URL = ''
+LOGIN_URL = 'https://graph.qq.com/oauth2.0/show?which=Login&display=pc&client_id=100240394&response_type=code&redirect_uri=http://login.meiwu.co/oauth/callback&scope=get_user_info,add_topic,get_info,get_fanslist,get_idolist,add_idol,check_page_fans'
+EMPTYIMAGE = wx.Image(100, 100)
+
 
 def get_qrcode():
-    url = 'https://ssl.ptlogin2.qq.com/ptqrshow?appid=716027609&e=2&l=M&s=3&d=72&v=4&t=0.38620931174474316&daid=383&pt_3rd_aid=100240394'
+    if QRCODE_URL == '':
+        return EMPTYIMAGE
 
     try:
-        fp = urllib.urlopen(url)
+        fp = urllib.urlopen(QRCODE_URL)
         data = fp.read()
         fp.close()
-        return wx.ImageFromStream(StringIO(data))
+        return wx.Image(StringIO(data))
     except Exception as e:
         print str(e)
-    return wx.Image(240,240)
+    return EMPTYIMAGE
 
 
-def login(login_url, login_name, login_passwd, interval=3):
+def login(login_url=LOGIN_URL, interval=5):
     driver = webdriver.Chrome()
     driver.get(login_url)
-    time.sleep(interval)
     driver.switch_to.window(driver.window_handles[-1])
     driver.switch_to.frame("ptlogin_iframe")  # iframe必须逐级切入
-    switch = driver.find_element_by_xpath('//*[@id="switcher_plogin"]')
-    switch.click()
-    time.sleep(interval)
 
-    account = driver.find_element_by_id('u')
-    password = driver.find_element_by_id('p')
-    account.clear()
-    password.clear()
-    account.send_keys(login_name)
-    time.sleep(interval)
-    password.send_keys(login_passwd)
-    time.sleep(interval)
-
-    submit = driver.find_element_by_id('login_button')
-    submit.click()
-    time.sleep(interval)
-
-    cookies = driver.get_cookies()
-    time.sleep(30)
-    driver.close()
+    while True:
+        try:
+            qrcode = driver.find_element_by_id('qrlogin_img')
+            tmp = qrcode.get_attribute("src")
+            global QRCODE_URL
+            if tmp != '' and tmp != QRCODE_URL:
+                print 'qrcode url change: ' + tmp
+                QRCODE_URL = tmp
+        except Exception as e:
+            print str(e)
+        # check if qrcode scan
+        print u"当前网页：" + driver.title + " => " + driver.current_url
+        time.sleep(interval)
     return cookies
 
 if __name__ == '__main__':
     url = 'https://graph.qq.com/oauth2.0/show?which=Login&display=pc&client_id=100240394&response_type=code&redirect_uri=http://login.meiwu.co/oauth/callback&scope=get_user_info,add_topic,get_info,get_fanslist,get_idolist,add_idol,check_page_fans'
-    name = ""
-    password = ""
-    cookies = login(url, name, password)
+    cookies = login(url)
     print(cookies)

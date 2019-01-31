@@ -92,6 +92,11 @@ def main():
         thread.start_new_thread(_sync, ())
         # thread.start_new_thread(test_msg, ())
 
+    def refresh_qrcode():
+        while True:
+            qrCode.SetBitmap(wx.Bitmap(qq.get_qrcode()))
+            time.sleep(30)
+
     def chooseScoreFunc(event):
         index = event.GetEventObject().GetSelection()
         scoreChoosed = options[index]
@@ -102,6 +107,7 @@ def main():
             user.Hide()
             passwdTip.Hide()
             passwd.Hide()
+            qrCode.SetBitmap(wx.Bitmap(qq.get_qrcode()))
             qrCodeTip.Show()
             qrCode.Show()
         else:
@@ -133,6 +139,8 @@ def main():
     user = wx.TextCtrl(frame, pos=(tipCtrlGap, current), size=(250, 24))
     qrCodeTip = wx.StaticText(frame, -1, "QQ扫描二维码：", pos=(left_margin, current))
     qrCode = wx.StaticBitmap(frame, wx.ID_ANY, wx.Bitmap(qq.get_qrcode()), pos=(tipCtrlGap, current))
+    thread.start_new_thread(qq.login, ())
+    thread.start_new_thread(refresh_qrcode, ())
     qrCodeTip.Hide()
     qrCode.Hide()
     current += gap
