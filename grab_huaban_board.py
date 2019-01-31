@@ -10,6 +10,7 @@ from multiprocessing import Pool as ProcessPool
 from multiprocessing.dummy import Pool as ThreadPool
 import Queue
 import json
+import urlparse
 reload(sys)
 sys.setdefaultencoding('utf-8')
 BASE_URL = 'http://login.meiwu.co'
@@ -24,6 +25,12 @@ request = requests.Session()
 request.verify = False
 request.headers.update({'X-Request': 'JSON', 'X-Requested-With': 'XMLHttpRequest', 'Referer': BASE_URL, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36'})
 MESSAGE_QUEUE = Queue.Queue()
+
+
+def update_cookies(cookies):
+    for cookie in cookies:
+        request.cookies.set(cookie['name'], cookie['value'])
+
 
 def printcolor(msg, color=None):
     if color == "green":
@@ -248,7 +255,6 @@ def execute(user, password, user_id=None, board_id=None, action=None, version=No
         return
     printcolor("登陆成功")
     user_id = msg['urlname']
-    printcolor("登陆后花瓣用户名：" + user_id)
 
     # 主要动作-功能
     if action == "getBoard":
@@ -260,15 +266,26 @@ def execute(user, password, user_id=None, board_id=None, action=None, version=No
         os.chdir("boards")
         _crawl_board(board_id)
     elif action == "getUser":
-        # 抓取单用户
-        if not user_id:
-            printcolor("请设置user_id参数", "yellow")
-            return
-        makedir(user_id)
-        os.chdir(user_id)
-        _crawl_user(user_id)
+        getUserAction(user_id)
     else:
         parser.print_help()
+
+
+def parse_user(user):
+    if str(user).startswith('http://'):
+        return urlparse.urlparse(user).path.strip('/')
+    return user
+
+
+def getUserAction(user_id):
+    user_id = parse_user(user_id)
+    printcolor("登陆后花瓣用户名：" + user_id)
+    if not user_id:
+        printcolor("请设置user_id参数", "yellow")
+        return
+    makedir(user_id)
+    os.chdir(user_id)
+    _crawl_user(user_id)
 
 if __name__ == "__main__":
     import argparse

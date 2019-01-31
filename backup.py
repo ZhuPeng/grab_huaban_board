@@ -5,8 +5,12 @@ import thread
 import time
 import os
 import getpass
-from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor, makedir
+from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor, makedir, \
+    update_cookies, getUserAction
 import qq
+import weibo
+from selenium import webdriver
+DRIVER = webdriver.Chrome()
 passwd_file = 'password.conf'
 sync_flag = False
 user_name = getpass.getuser()
@@ -78,7 +82,19 @@ def main():
         usertext = user.GetValue()
         passwdtext = passwd.GetValue()
         MESSAGE_QUEUE.put("读取用户名和密码")
+        selectOpt = chooseScoreChoice.GetCurrentSelection()
         save_file(usertext, passwdtext)
+        printcolor("当前登录方式：" + options[selectOpt])
+        action = execute
+
+        def weibo_action(u, p):
+            printcolor(weibo.OPTION + " 方式耗时较长，请耐心等待一下")
+            cururl, cookies = weibo.login(u, p, driver=DRIVER)
+            update_cookies(cookies)
+            getUserAction(cururl)
+
+        if options[selectOpt] == weibo.OPTION:
+            action = weibo_action
 
         @exception_run
         def _sync():
@@ -86,7 +102,7 @@ def main():
             sync_flag = True
             MESSAGE_QUEUE.put("开始同步...")
             change_workspace()
-            execute(usertext, passwdtext)
+            action(usertext, passwdtext)
             MESSAGE_QUEUE.put("操作完成，图片备份目录：文稿 => 花瓣网备份")
             sync_flag = False
         thread.start_new_thread(_sync, ())
@@ -101,7 +117,7 @@ def main():
         index = event.GetEventObject().GetSelection()
         scoreChoosed = options[index]
         printcolor("选择登录方式：" + scoreChoosed)
-        defalutOpt = index
+        selectOpt = index
         if scoreChoosed == 'QQ 登录':
             userTip.Hide()
             user.Hide()
@@ -127,20 +143,19 @@ def main():
 
     frame = wx.Frame(None, title="花瓣本地备份", pos=(80, 80), size=(width, width))
 
-    options = ['普通登录','QQ 登录']
-    defalutOpt = 0
+    options = ['普通登录', weibo.OPTION]
     wx.StaticText(frame, -1, "登录方式：", pos=(left_margin, current))
     chooseScoreChoice = wx.Choice(frame, -1, choices=options, pos=(tipCtrlGap, current), size=(250, 30))
     frame.Bind(wx.EVT_CHOICE, chooseScoreFunc, chooseScoreChoice)
-    chooseScoreChoice.SetSelection(defalutOpt)
+    chooseScoreChoice.SetSelection(0)
     current += gap
 
     userTip = wx.StaticText(frame, -1, "用户名：", pos=(left_margin, current))
     user = wx.TextCtrl(frame, pos=(tipCtrlGap, current), size=(250, 24))
     qrCodeTip = wx.StaticText(frame, -1, "QQ扫描二维码：", pos=(left_margin, current))
     qrCode = wx.StaticBitmap(frame, wx.ID_ANY, wx.Bitmap(qq.get_qrcode()), pos=(tipCtrlGap, current))
-    thread.start_new_thread(qq.login, ())
-    thread.start_new_thread(refresh_qrcode, ())
+    # thread.start_new_thread(qq.login, ())
+    # thread.start_new_thread(refresh_qrcode, ())
     qrCodeTip.Hide()
     qrCode.Hide()
     current += gap
