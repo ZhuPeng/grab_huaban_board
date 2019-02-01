@@ -8,8 +8,7 @@ import sys
 import getpass
 from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor, makedir, \
     update_cookies, getUserAction
-import qq
-import weibo
+import third_login
 from selenium import webdriver
 runtime_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
 printcolor("当前运行目录：" + runtime_dir)
@@ -31,13 +30,10 @@ def exception_run(f):
 
 @exception_run
 def run_browser():
-    # DRIVER = webdriver.PhantomJS()
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--no-sandbox')
     DRIVER = webdriver.Chrome(executable_path=os.path.join(runtime_dir, "./chromedriver"), chrome_options=chrome_options)
-    # DRIVER = webdriver.Chrome()
-    # DRIVER.set_window_size(1920, 1080)  # big enough
 
 
 @exception_run
@@ -101,14 +97,14 @@ def main():
         printcolor("当前登录方式：" + options[selectOpt])
         action = execute
 
-        def weibo_action(u, p):
-            printcolor(weibo.OPTION + " 方式耗时较长，请耐心等待一下")
-            cururl, cookies = weibo.login(u, p, driver=DRIVER)
+        def third_action(u, p):
+            printcolor(options[selectOpt] + " 方式耗时较长，请耐心等待一下")
+            cururl, cookies = third_login.login(options[selectOpt], driver=DRIVER)
             update_cookies(cookies)
             getUserAction(cururl)
 
-        if options[selectOpt] == weibo.OPTION:
-            action = weibo_action
+        if options[selectOpt] in third_login.OPTIONS:
+            action = third_action
 
         @exception_run
         def _sync():
@@ -122,31 +118,13 @@ def main():
         thread.start_new_thread(_sync, ())
         # thread.start_new_thread(test_msg, ())
 
-    def refresh_qrcode():
-        while True:
-            qrCode.SetBitmap(wx.Bitmap(qq.get_qrcode()))
-            time.sleep(30)
-
     def chooseScoreFunc(event):
         index = event.GetEventObject().GetSelection()
         scoreChoosed = options[index]
         printcolor("选择登录方式：" + scoreChoosed)
         selectOpt = index
-        if scoreChoosed == 'QQ 登录':
-            userTip.Hide()
-            user.Hide()
-            passwdTip.Hide()
-            passwd.Hide()
-            qrCode.SetBitmap(wx.Bitmap(qq.get_qrcode()))
-            qrCodeTip.Show()
-            qrCode.Show()
-        else:
-            userTip.Show()
-            user.Show()
-            passwdTip.Show()
-            passwd.Show()
-            qrCodeTip.Hide()
-            qrCode.Hide()
+        if scoreChoosed in third_login.OPTIONS:
+            thread.start_new_thread(sync, (event, ))
 
     app = wx.App()
     width = 800
@@ -157,7 +135,8 @@ def main():
 
     frame = wx.Frame(None, title="花瓣本地备份", pos=(80, 80), size=(width, width))
 
-    options = ['普通登录', weibo.OPTION]
+    options = ['普通登录']
+    options.extend(third_login.OPTIONS.keys())
     wx.StaticText(frame, -1, "登录方式：", pos=(left_margin, current))
     chooseScoreChoice = wx.Choice(frame, -1, choices=options, pos=(tipCtrlGap, current), size=(250, 30))
     frame.Bind(wx.EVT_CHOICE, chooseScoreFunc, chooseScoreChoice)
@@ -166,12 +145,6 @@ def main():
 
     userTip = wx.StaticText(frame, -1, "用户名：", pos=(left_margin, current))
     user = wx.TextCtrl(frame, pos=(tipCtrlGap, current), size=(250, 24))
-    qrCodeTip = wx.StaticText(frame, -1, "QQ扫描二维码：", pos=(left_margin, current))
-    qrCode = wx.StaticBitmap(frame, wx.ID_ANY, wx.Bitmap(qq.get_qrcode()), pos=(tipCtrlGap, current))
-    # thread.start_new_thread(qq.login, ())
-    # thread.start_new_thread(refresh_qrcode, ())
-    qrCodeTip.Hide()
-    qrCode.Hide()
     current += gap
 
     passwdTip = wx.StaticText(frame, -1, "密码：", pos=(left_margin, current))
