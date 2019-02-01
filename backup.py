@@ -128,7 +128,7 @@ def main():
 
     app = wx.App()
     width = 800
-    gap = 50
+    gap = 40
     current = 10
     tipCtrlGap = 100
     left_margin = 5

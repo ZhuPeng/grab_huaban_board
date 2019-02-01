@@ -13,10 +13,8 @@ def login(logintype, driver=None, interval=3):
         from selenium import webdriver
         driver = webdriver.Chrome()
     driver.get(LOGIN_URL)
-    time.sleep(interval)
     weibo = driver.find_element_by_class_name(OPTIONS[logintype])
     weibo.click()
-    print 'Current url:', driver.current_url
     while True:
         print 'Current url:', driver.current_url
         if u'画板' in driver.page_source and u'采集' in driver.page_source:
