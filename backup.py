@@ -4,23 +4,20 @@ import wx
 import thread
 import time
 import os
+import sys
 import getpass
 from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor, makedir, \
     update_cookies, getUserAction
 import qq
 import weibo
 from selenium import webdriver
-# DRIVER = webdriver.PhantomJS()
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--headless')
-chrome_options.add_argument('--no-sandbox')
-DRIVER = webdriver.Chrome(executable_path=os.path.abspath("./chromedriver"), chrome_options=chrome_options)
-# DRIVER = webdriver.Chrome()
-# DRIVER.set_window_size(1920, 1080)  # big enough
+runtime_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+printcolor("当前运行目录：" + runtime_dir)
 passwd_file = 'password.conf'
 sync_flag = False
 user_name = getpass.getuser()
 BASE_PATH = '/Users/%s/Documents/花瓣网备份/' % user_name
+DRIVER = None
 
 
 def exception_run(f):
@@ -30,6 +27,17 @@ def exception_run(f):
         except Exception as e:
             printcolor(os.getcwd() + ' 程序运行出错：' + str(e))
     return wrapper
+
+
+@exception_run
+def run_browser():
+    # DRIVER = webdriver.PhantomJS()
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    DRIVER = webdriver.Chrome(executable_path=os.path.join(runtime_dir, "./chromedriver"), chrome_options=chrome_options)
+    # DRIVER = webdriver.Chrome()
+    # DRIVER.set_window_size(1920, 1080)  # big enough
 
 
 @exception_run
@@ -180,6 +188,7 @@ def main():
 
     content_text = wx.TextCtrl(frame,  pos=(left_margin, current), size=(width, width-200), style=wx.TE_MULTILINE)
     thread.start_new_thread(sync_msg, (content_text, ))
+    thread.start_new_thread(run_browser, ())
 
     frame.Show()
     app.MainLoop()

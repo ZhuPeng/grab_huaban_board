@@ -13,6 +13,7 @@ def login(login_name, login_passwd, driver=None, interval=3):
     weibo = driver.find_element_by_class_name('weibo')
     weibo.click()
     print 'Current url:', driver.current_url
+    time.sleep(interval)
 
     account = driver.find_element_by_id('userId')
     password = driver.find_element_by_id('passwd')
@@ -21,18 +22,23 @@ def login(login_name, login_passwd, driver=None, interval=3):
     account.send_keys(login_name)
     time.sleep(interval)
     password.send_keys(login_passwd)
+    time.sleep(interval)
 
     submit = driver.find_element_by_class_name('WB_btn_login')
     submit.click()
     time.sleep(interval)
     print 'Current url:', driver.current_url
 
-    while True:
-        driver.get('http://login.meiwu.co/')
+    count = 5
+    while count > 0:
         time.sleep(interval)
+        driver.get('http://login.meiwu.co/')
         print 'Current url:', driver.current_url
         if '画板' in driver.page_source:
             break
+        count -= 1
+    else:
+        raise Exception("未成功登录，请稍后再试")
 
     cookies = driver.get_cookies()
     return driver.current_url, cookies

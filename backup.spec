@@ -5,7 +5,7 @@ block_cipher = None
 
 a = Analysis(['backup.py'],
              pathex=['/Users/zhupeng/Work/git/grab_huaban_board'],
-             binaries=[("./chrome", '.'), ('./chromedriver', '.')],
+             binaries=[("./bin/chrome", '.'), ('./bin/chromedriver', '.')],
              datas=[],
              hiddenimports=[],
              hookspath=[],
