@@ -17,7 +17,8 @@ def login(logintype, driver=None, interval=3):
     weibo.click()
     while True:
         print 'Current url:', driver.current_url
-        if u'画板' in driver.page_source and u'采集' in driver.page_source:
+        if u'画板' in driver.page_source and u'采集' in driver.page_source and \
+                u'搜索我的画板' in driver.page_source:
             break
         time.sleep(interval)
 

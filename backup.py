@@ -100,6 +100,7 @@ def main():
         def third_action(u, p):
             printcolor(options[selectOpt] + " 方式耗时较长，请耐心等待一下")
             cururl, cookies = third_login.login(options[selectOpt], driver=DRIVER)
+            loginsuccess.Show()
             update_cookies(cookies)
             getUserAction(cururl)
 
@@ -149,6 +150,8 @@ def main():
 
     passwdTip = wx.StaticText(frame, -1, "密码：", pos=(left_margin, current))
     passwd = wx.TextCtrl(frame, pos=(tipCtrlGap, current), size=(250, 24))
+    loginsuccess = wx.Dialog(frame, title='登录成功', size=(250, 150))
+    loginsuccess.Hide()
     current += gap
 
     u, p = read_input()
