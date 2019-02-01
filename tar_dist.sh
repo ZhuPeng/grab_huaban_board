@@ -10,5 +10,10 @@ cp ../bin/chrome ../bin/chromedriver backup.app/Contents/MacOS
 ls backup.app/Contents/MacOS/
 cp -r backup.app huaban_backup
 
-tar zcvf huaban_backup.tar.gz huaban_backup
-ls -al huaban_backup.tar.gz
+type=""
+if [ -n "$1" ]; then
+    type=".${1}"
+fi
+
+tar zcvf "huaban_backup${type}.tar.gz" huaban_backup
+ls -al "huaban_backup${type}.tar.gz"
