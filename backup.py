@@ -9,9 +9,14 @@ import getpass
 from grab_huaban_board import execute, MESSAGE_QUEUE, printcolor, makedir, \
     update_cookies, getUserAction
 import third_login
+import traceback
 from selenium import webdriver
-runtime_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+if getattr(sys, 'frozen', False):
+    runtime_dir = sys._MEIPASS
+else:
+    runtime_dir = os.path.dirname(os.path.abspath(__file__))
 printcolor("当前运行目录：" + runtime_dir)
+os.environ['PATH'] += ':' + runtime_dir
 passwd_file = 'password.conf'
 sync_flag = False
 user_name = getpass.getuser()
@@ -25,6 +30,7 @@ def exception_run(f):
             return f(*args, **kws)
         except Exception as e:
             printcolor(os.getcwd() + ' 程序运行出错：' + str(e))
+            printcolor(traceback.format_exc())
     return wrapper
 
 
@@ -33,7 +39,9 @@ def run_browser():
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--no-sandbox')
-    DRIVER = webdriver.Chrome(executable_path=os.path.join(runtime_dir, "./chromedriver"), chrome_options=chrome_options)
+    chrome_options.binary_location = os.path.join(runtime_dir, 'chrome')
+    print 'chrome_options:', chrome_options.to_capabilities()
+    DRIVER = webdriver.Chrome(chrome_options=chrome_options)
 
 
 @exception_run
