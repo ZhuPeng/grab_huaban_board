@@ -176,6 +176,15 @@ def _crawl_user(user_id):
         pool.join()#主进程阻塞等待子进程的退出
         printcolor("Current user {}, download over".format(user_id), "green")
 
+def auth_login(user, password):
+    if user and password:
+        auth = _post_login(user, password)
+        if not auth["success"]:
+            return False, '登陆失败: ' + auth.get("msg", '')
+        return True, auth['data']
+    else:
+        return False, "您未设置账号密码，将处于未登录状态，抓取的图片可能有限；设置账号密码后，图片抓取率可达99.99%！"
+
 def main(args):
     if not args.action:
         parser.print_help()
@@ -185,18 +194,16 @@ def main(args):
     password   = args.password
     version    = args.version
     board_id   = args.board_id
-    user_id    = args.user_id
     if version:
         printcolor("https://github.com/staugur/grab_huaban_board, v{}".format(__version__))
         return
     # 用户登录
-    if user and password:
-        auth = _post_login(user, password)
-        if not auth["success"]:
-            printcolor(auth["msg"], "yellow")
-            return
-    else:
-        printcolor("您未设置账号密码，将处于未登录状态，抓取的图片可能有限；设置账号密码后，图片抓取率可达99.99%！")
+    ok, msg = auth_login(user, password)
+    if not ok:
+        printcolor(msg, "yellow")
+        return
+    user_id = msg['urlname']
+
     # 主要动作-功能
     if action == "getBoard":
         # 抓取单画板
@@ -225,6 +232,5 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--password", help="花瓣网账号对应密码")
     parser.add_argument("-v", "--version", help="查看版本号", action='store_true')
     parser.add_argument("--board_id", help="花瓣网单个画板id, action=getBoard时使用")
-    parser.add_argument("--user_id", help="花瓣网单个用户id, action=getUser时使用")
     args = parser.parse_args()
     main(args)
